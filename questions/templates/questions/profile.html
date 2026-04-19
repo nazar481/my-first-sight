@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ profile_user.username }} — профиль пользователя | Q&A</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            color: #1a1a1a;
+        }
+
+        /* Навигация */
+        .navbar {
+            background: linear-gradient(135deg, #1a4b8c 0%, #0d2b5c 100%);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            padding: 0.7rem 0;
+        }
+
+        .navbar-brand {
+            font-size: 1.6rem;
+            font-weight: 700;
+            color: white !important;
+            display: flex;
+            align-items: center;
+            letter-spacing: -0.5px;
+        }
+
+        .navbar-brand i {
+            color: #ffd700;
+            margin-right: 10px;
+            font-size: 1.8rem;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
+        }
+
+        .navbar-nav .nav-link {
+            color: rgba(255,255,255,0.9) !important;
+            font-weight: 500;
+            padding: 0.5rem 1.2rem !important;
+            border-radius: 30px;
+            transition: all 0.3s;
+            margin: 0 2px;
+            font-size: 0.95rem;
+        }
+
+        .navbar-nav .nav-link:hover {
+            background: rgba(255,255,255,0.15);
+            color: white !important;
+            transform: translateY(-1px);
+        }
+
+        .navbar-nav .nav-link i {
+            margin-right: 6px;
+            font-size: 0.9rem;
+        }
+
+        /* Основной контейнер */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        /* Хлебные крошки */
+        .breadcrumb {
+            background: transparent;
+            padding: 1.5rem 0 1rem;
+            margin: 0;
+        }
+
+        .breadcrumb-item a {
+            color: #1a4b8c;
+            text-decoration: none;
+        }
+
+        .breadcrumb-item.active {
+            color: #6c757d;
+        }
+
+        /* Кнопка назад */
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            color: #1a4b8c;
+            text-decoration: none;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            transition: all 0.2s;
+            background: white;
+            padding: 0.5rem 1.5rem;
+            border-radius: 50px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .back-btn i {
+            margin-right: 8px;
+            transition: transform 0.2s;
+        }
+
+        .back-btn:hover {
+            color: #1a4b8c;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(26,75,140,0.15);
+        }
+
+        .back-btn:hover i {
+            transform: translateX(-3px);
+        }
+
+        /* Шапка профиля */
+        .profile-header {
+            background: white;
+            border-radius: 30px;
+            padding: 3rem 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+            border: 1px solid #eaeef2;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .profile-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 120px;
+            background: linear-gradient(135deg, #1a4b8c 0%, #0d2b5c 100%);
+            opacity: 0.1;
+        }
+
+        .profile-avatar {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #1a4b8c, #0d2b5c);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 3.5rem;
+            text-transform: uppercase;
+            margin: 0 auto 1.5rem;
+            border: 5px solid white;
+            box-shadow: 0 4px 20px rgba(26,75,140,0.3);
+            position: relative;
+        }
+
+        .profile-name {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+        }
+
+        .profile-bio {
+            color: #5e6f7d;
+            font-size: 1.1rem;
+            max-width: 600px;
+            margin: 0 auto 1.5rem;
+            line-height: 1.6;
+        }
+
+        .profile-meta {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #5e6f7d;
+            background: #f8f9fa;
+            padding: 0.5rem 1.2rem;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            border: 1px solid #eaeef2;
+        }
+
+        .meta-item i {
+            color: #1a4b8c;
+        }
+
+        .meta-item .fa-star {
+            color: #ffd700;
+        }
+
+        /* Статистика */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 20px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            border: 1px solid #eaeef2;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            border-color: #1a4b8c;
+        }
+
+        .stat-value {
+            font-size: 2.8rem;
+            font-weight: 700;
+            color: #1a4b8c;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: #5e6f7d;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 500;
+        }
+
+        /* Табы */
+        .profile-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin: 2rem 0 1.5rem;
+            border-bottom: 2px solid #eaeef2;
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            padding: 0.8rem 2rem;
+            background: transparent;
+            border: none;
+            color: #5e6f7d;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tab-btn i {
+            font-size: 1rem;
+        }
+
+        .tab-btn:hover {
+            color: #1a4b8c;
+            background: #f0f2f5;
+        }
+
+        .tab-btn.active {
+            background: #1a4b8c;
+            color: white;
+        }
+
+        .tab-btn.active i {
+            color: white;
+        }
+
+        /* Контент табов */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Карточки вопросов */
+        .question-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-left: 5px solid #1a4b8c;
+            transition: all 0.3s;
+        }
+
+        .question-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .question-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+        }
+
+        .question-title a {
+            color: #1a1a1a;
+            text-decoration: none;
+        }
+
+        .question-title a:hover {
+            color: #1a4b8c;
+        }
+
+        .question-preview {
+            color: #5e6f7d;
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .question-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+            color: #8a9aa8;
+            border-top: 1px solid #eaeef2;
+            padding-top: 1rem;
+        }
+
+        .question-stats {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .question-stats span {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .question-stats i {
+            color: #1a4b8c;
+        }
+
+        .star-rating {
+            color: #ffd700;
+        }
+
+        /* Карточки ответов */
+        .answer-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-left: 5px solid #28a745;
+            transition: all 0.3s;
+        }
+
+        .answer-card:hover {
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+            transform: translateX(5px);
+        }
+
+        .answer-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.8rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px dashed #eaeef2;
+        }
+
+        .answer-to {
+            color: #5e6f7d;
+            font-size: 0.9rem;
+        }
+
+        .answer-to a {
+            color: #1a4b8c;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .answer-to a:hover {
+            text-decoration: underline;
+        }
+
+        .answer-date {
+            margin-left: auto;
+            color: #8a9aa8;
+            font-size: 0.85rem;
+        }
+
+        .answer-content {
+            color: #2c3e50;
+            line-height: 1.6;
+            margin-bottom: 0.8rem;
+        }
+
+        /* Популярные вопросы */
+        .popular-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .popular-card {
+            background: white;
+            border-radius: 16px;
+            padding: 1.2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #eaeef2;
+            transition: all 0.3s;
+        }
+
+        .popular-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+
+        .popular-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            height: 2.8rem;
+            overflow: hidden;
+        }
+
+        .popular-title a {
+            color: #1a1a1a;
+            text-decoration: none;
+        }
+
+        .popular-title a:hover {
+            color: #1a4b8c;
+        }
+
+        .popular-stats {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+            font-size: 0.9rem;
+        }
+
+        .popular-stat {
+            color: #5e6f7d;
+        }
+
+        .popular-stat .value {
+            display: block;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1a4b8c;
+        }
+
+        /* Кнопка "Показать все" */
+        .show-all {
+            text-align: center;
+            margin: 2rem 0;
+        }
+
+        .btn-show {
+            background: transparent;
+            border: 2px solid #1a4b8c;
+            color: #1a4b8c;
+            padding: 0.6rem 2rem;
+            border-radius: 50px;
+            font-weight: 600;
+            transition: all 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-show:hover {
+            background: #1a4b8c;
+            color: white;
+            text-decoration: none;
+        }
+
+        /* Уведомления */
+        .alert {
+            border-radius: 12px;
+            border: none;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1.5rem;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .alert-info {
+            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+            color: #0d47a1;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .profile-avatar {
+                width: 120px;
+                height: 120px;
+                font-size: 2.5rem;
+            }
+
+            .profile-name {
+                font-size: 1.8rem;
+            }
+
+            .profile-meta {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .profile-tabs {
+                flex-direction: column;
+            }
+
+            .tab-btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            .question-footer {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: flex-start;
+            }
+
+            .answer-meta {
+                flex-wrap: wrap;
+            }
+
+            .answer-date {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Навигация -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'question_list' %}">
+                <i class="fas fa-question-circle"></i>
+                Q&A
+            </a>
+
+            <div class="navbar-nav ml-auto">
+                {% if user.is_authenticated %}
+                    <a class="nav-link" href="{% url 'logout' %}">
+                        <i class="fas fa-sign-out-alt"></i>Выйти
+                    </a>
+                {% else %}
+                    <a class="nav-link" href="{% url 'login' %}">
+                        <i class="fas fa-sign-in-alt"></i>Войти
+                    </a>
+                    <a class="nav-link" href="{% url 'register' %}">
+                        <i class="fas fa-user-plus"></i>Регистрация
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'question_list' %}">Все вопросы</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ profile_user.username }}</li>
+            </ol>
+        </nav>
+
+        <!-- Кнопка назад -->
+        <a href="{% url 'question_list' %}" class="back-btn">
+            <i class="fas fa-arrow-left"></i>
+            Назад к вопросам
+        </a>
+
+        <!-- Шапка профиля -->
+        <div class="profile-header">
+            <div class="profile-avatar">
+                {{ profile_user.username|first|upper }}
+            </div>
+            <h1 class="profile-name">{{ profile_user.username }}</h1>
+
+            {% if profile.bio %}
+                <p class="profile-bio">{{ profile.bio }}</p>
+            {% endif %}
+
+            <div class="profile-meta">
+                {% if profile.location %}
+                    <span class="meta-item">
+                        <i class="fas fa-map-marker-alt"></i> {{ profile.location }}
+                    </span>
+                {% endif %}
+
+                <span class="meta-item">
+                    <i class="far fa-calendar-alt"></i> С {{ profile_user.date_joined|date:"d.m.Y" }}
+                </span>
+
+                <span class="meta-item">
+                    <i class="fas fa-star"></i>
+                            <div class="stat-value">{{ total_stars }}</div>
+                </span>
+            </div>
+
+            <!-- Статистика -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ questions_count }}</div>
+                    <div class="stat-label">Вопросов</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ answers_count }}</div>
+                    <div class="stat-label">Ответов</div>
+                </div>
+                <div class="stat-card">
+                   <div class="stat-value">{{ total_stars }}</div>
+                    <div class="stat-label">звёзд</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Табы -->
+        <div class="profile-tabs">
+            <button class="tab-btn active" onclick="showTab('questions')">
+                <i class="fas fa-question-circle"></i> Вопросы ({{ questions_count }})
+            </button>
+            <button class="tab-btn" onclick="showTab('answers')">
+                <i class="fas fa-comment"></i> Ответы ({{ answers_count }})
+            </button>
+            <button class="tab-btn" onclick="showTab('popular')">
+                <i class="fas fa-fire"></i> Популярное ({{ total_stars }})
+            </button>
+        </div>
+
+        <!-- Вкладка с вопросами -->
+        <div id="questions-tab" class="tab-content active">
+            {% if questions %}
+                {% for question in questions|slice:":5" %}
+                <div class="question-card">
+                    <h3 class="question-title">
+                        <a href="{% url 'question_detail' question.pk %}">{{ question.title }}</a>
+                    </h3>
+                    <div class="question-preview">
+                        {{ question.content|truncatewords:20 }}
+                    </div>
+                    <div class="question-footer">
+                        <div class="question-stats">
+                            <span><i class="far fa-comment"></i> {{ question.answers.count }}</span>
+                            <span><i class="fas fa-eye"></i> {{ question.views_count }}</span>
+                        </div>
+                        <div class="star-rating">
+                            <i class="fas fa-star"></i> {{ question.likes.count }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if questions.count > 5 %}
+                <div class="show-all">
+                    <a href="#" class="btn-show">Показать все вопросы ({{ questions.count }})</a>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Пользователь еще не задавал вопросов
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Вкладка с ответами -->
+        <div id="answers-tab" class="tab-content">
+            {% if answers %}
+                {% for answer in answers|slice:":5" %}
+                <div class="answer-card">
+                    <div class="answer-meta">
+                        <div class="answer-to">
+                            <i class="fas fa-reply"></i> Ответ на вопрос:
+                            <a href="{% url 'question_detail' answer.question.pk %}">{{ answer.question.title|truncatewords:8 }}</a>
+                        </div>
+                        <div class="answer-date">
+                            <i class="far fa-clock"></i> {{ answer.created_at|date:"d.m.Y" }}
+                        </div>
+                    </div>
+                    <div class="answer-content">
+                        {{ answer.content|truncatewords:20 }}
+                    </div>
+                </div>
+                {% endfor %}
+
+                {% if answers.count > 5 %}
+                <div class="show-all">
+                    <a href="#" class="btn-show">Показать все ответы ({{ answers.count }})</a>
+                </div>
+                {% endif %}
+            {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Пользователь еще не отвечал на вопросы
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Вкладка с популярным -->
+        <div id="popular-tab" class="tab-content">
+    {% if questions %}
+        <div class="popular-grid">
+            {% for question in questions|dictsortreversed:"likes_count"|slice:":6" %}
+            <div class="popular-card">
+                <h4 class="popular-title">
+                    <a href="{% url 'question_detail' question.pk %}">{{ question.title|truncatewords:8 }}</a>
+                </h4>
+                <div class="popular-stats">
+                    <div class="popular-stat">
+                        <span class="value">{{ question.likes_count }}</span>
+                        <span>звёзд</span>
+                    </div>
+                    <div class="popular-stat">
+                        <span class="value">{{ question.answers_count }}</span>
+                        <span>ответов</span>
+                    </div>
+                    <div class="popular-stat">
+                        <span class="value">{{ question.views_count }}</span>
+                        <span>просм.</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <i class="fas fa-info-circle mr-2"></i>
+            Нет популярных вопросов
+        </div>
+    {% endif %}
+</div>
+    </div>
+
+    <!-- Скрипт для табов -->
+    <script>
+    function showTab(tabName) {
+        // Скрываем все табы
+        document.getElementById('questions-tab').classList.remove('active');
+        document.getElementById('answers-tab').classList.remove('active');
+        document.getElementById('popular-tab').classList.remove('active');
+
+        // Убираем активный класс у всех кнопок
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        // Показываем выбранный таб
+        document.getElementById(tabName + '-tab').classList.add('active');
+
+        // Добавляем активный класс соответствующей кнопке
+        event.target.classList.add('active');
+    }
+    </script>
+
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
