@@ -67,19 +67,13 @@ class Profile(models.Model):
     bio = models.TextField(blank=True)
     location = models.CharField(max_length=100, blank=True)
     website = models.URLField(blank=True)
+
     def __str__(self):
         return self.user.username
-    @classmethod
-    def get_or_create(cls, user):
-        return cls.objects.get_or_create(user=user)
 
     @classmethod
     def get_or_create(cls, user):
-        try:
-            return cls.objects.get(user=user), False
-        except cls.DoesNotExist:
-            profile = cls.objects.create(user=user)
-            return profile, True
+        return cls.objects.get_or_create(user=user)
 
     @classmethod
     def create(cls, user):

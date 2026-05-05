@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Q&A{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #f3f6fb;
+            --bg-soft: #ffffff;
+            --text: #121826;
+            --card-bg: #ffffff;
+            --card-border: #d8e1ee;
+            --muted: #617387;
+            --muted-light: #8ba0b8;
+            --header-color: #0f172a;
+            --brand: #1a4b8c;
+            --brand-strong: #0d2b5c;
+            --accent: #2a65b7;
+            --theme-btn-bg: #111111;
+            --theme-btn-text: #ffffff;
+            --theme-btn-border: #111111;
+        }
+        [data-theme="dark"] {
+            --bg: #0b1220;
+            --bg-soft: #101a2d;
+            --text: #e8eef9;
+            --card-bg: #131f36;
+            --card-border: #2a3b58;
+            --muted: #9fb2cd;
+            --muted-light: #7f95b5;
+            --header-color: #f3f7ff;
+            --brand: #2e63cf;
+            --brand-strong: #214ea8;
+            --accent: #76b2ff;
+            --theme-btn-bg: #d4b25b;
+            --theme-btn-text: #1d1606;
+            --theme-btn-border: #c9a650;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .navbar {
+            background: linear-gradient(135deg, #1a4b8c 0%, #0d2b5c 100%);
+            border-bottom: 1px solid var(--card-border);
+            box-shadow: 0 6px 20px rgba(13, 43, 92, 0.25);
+            padding: 0.65rem 0;
+        }
+        .nav-main {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            margin-bottom: 0.55rem;
+        }
+        .nav-top-left {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem 1rem;
+            min-width: 0;
+        }
+        .nav-top-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .navbar-brand {
+            font-size: 1.45rem;
+            font-weight: 700;
+            color: #ffffff !important;
+            display: flex;
+            align-items: center;
+            flex-shrink: 0;
+        }
+        .navbar-brand i {
+            color: #ffd700;
+            margin-right: 10px;
+        }
+        .menu-toggle {
+            border: 1px solid rgba(255, 255, 255, 0.35);
+            background: rgba(255, 255, 255, 0.16);
+            color: #fff;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .menu-toggle:hover {
+            background: rgba(255, 255, 255, 0.24);
+        }
+        .side-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+            z-index: 1100;
+        }
+        .side-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .side-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: min(320px, 86vw);
+            height: 100vh;
+            background: var(--card-bg);
+            border-right: 1px solid var(--card-border);
+            box-shadow: 12px 0 28px rgba(0, 0, 0, 0.25);
+            transform: translateX(-105%);
+            transition: transform 0.25s ease;
+            z-index: 1200;
+            padding: 1rem;
+        }
+        .side-drawer.open {
+            transform: translateX(0);
+        }
+        .drawer-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+        .drawer-title {
+            font-weight: 700;
+            color: var(--header-color);
+            margin: 0;
+        }
+        .drawer-close {
+            border: 1px solid var(--card-border);
+            background: transparent;
+            color: var(--text);
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        .drawer-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.55rem;
+        }
+        .drawer-link {
+            display: block;
+            padding: 0.75rem 0.85rem;
+            border-radius: 10px;
+            text-decoration: none;
+            color: var(--text);
+            background: var(--bg-soft);
+            border: 1px solid var(--card-border);
+            font-weight: 600;
+        }
+        .drawer-link:hover {
+            text-decoration: none;
+            color: var(--header-color);
+            filter: brightness(0.98);
+        }
+        .nav-search {
+            width: min(760px, 100%);
+            margin: 0 auto;
+        }
+        .search-wrap {
+            display: flex;
+            align-items: center;
+            background: #ffffff;
+            border: 2px solid #d7e2ef;
+            border-radius: 999px;
+            padding: 0.2rem 0.2rem 0.2rem 1rem;
+            box-shadow: 0 5px 16px rgba(0, 0, 0, 0.1);
+            min-height: 48px;
+        }
+        .search-wrap i {
+            color: #7f95b5;
+            margin-right: 0.7rem;
+        }
+        .search-input {
+            background: transparent;
+            border: none;
+            color: #1a2433;
+            flex: 1;
+            min-width: 0;
+            outline: none;
+            font-size: 1rem;
+        }
+        .search-input::placeholder {
+            color: #8da2ba;
+        }
+        .search-btn {
+            border: none;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #2b6ad3, #2150c7);
+            color: #fff;
+            padding: 0.55rem 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            min-width: 110px;
+        }
+        .search-btn:hover {
+            filter: brightness(1.05);
+        }
+        .search-wrap:focus-within {
+            border-color: #6ea4ff;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.22);
+        }
+        #theme-toggle {
+            flex-shrink: 0;
+            border: 1px solid var(--theme-btn-border);
+            border-radius: 999px;
+            padding: 0.45rem 0.72rem;
+            font-size: 1rem;
+            background: var(--theme-btn-bg);
+            color: var(--theme-btn-text);
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.2s ease;
+            font-weight: 600;
+        }
+        #theme-toggle:hover {
+            filter: brightness(1.06);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+        /* Базовые стили для карточек (могут быть переопределены) */
+        .question-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1.2rem;
+            border: 1px solid var(--card-border);
+            transition: 0.3s;
+        }
+        .question-title a {
+            color: var(--text);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1.3rem;
+        }
+        .question-title a:hover {
+            color: var(--accent);
+        }
+        .alert-fixed {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            min-width: 250px;
+        }
+        .btn-pill {
+            border-radius: 999px;
+            padding: 0.5rem 1.1rem;
+            font-weight: 600;
+        }
+        .btn-primary-gradient {
+            background: linear-gradient(135deg, var(--brand), var(--brand-strong));
+            color: #fff;
+            border: none;
+        }
+        .btn-primary-gradient:hover {
+            color: #fff;
+            filter: brightness(1.05);
+        }
+        .muted-note {
+            color: var(--muted-light);
+            font-size: 0.9rem;
+        }
+        .alert-fade-out {
+            opacity: 0;
+            transform: translateY(-6px);
+            transition: opacity 0.35s ease, transform 0.35s ease;
+        }
+        .form-control,
+        .custom-select,
+        textarea,
+        select {
+            background: var(--bg-soft) !important;
+            color: var(--text) !important;
+            border-color: var(--card-border) !important;
+        }
+        .form-control::placeholder,
+        textarea::placeholder {
+            color: var(--muted-light) !important;
+        }
+        .form-control:focus,
+        textarea:focus,
+        select:focus {
+            box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.2) !important;
+        }
+        .btn-secondary {
+            background: #eef3fa !important;
+            border-color: #d7e2ef !important;
+        }
+        .alert-info,
+        .alert-success,
+        .alert-danger {
+            border: 1px solid var(--card-border);
+            color: var(--text);
+        }
+        .alert-info { background: #edf5ff; }
+        .alert-success { background: #e9f9ef; }
+        .alert-danger { background: #ffeef1; }
+        [data-theme="dark"] .search-wrap {
+            background: #0f1a2d;
+            border-color: #324a70;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+        }
+        [data-theme="dark"] .search-input {
+            color: #e8eef9;
+        }
+        [data-theme="dark"] .search-input::placeholder {
+            color: #7f95b5;
+        }
+        [data-theme="dark"] .search-wrap i {
+            color: #7f95b5;
+        }
+        [data-theme="dark"] .menu-toggle {
+            border-color: #3e5a86;
+            background: #1b2b4b;
+            color: #e8eef9;
+        }
+        [data-theme="dark"] .drawer-link {
+            background: #172741;
+            border-color: #334a70;
+            color: #dbe7fb;
+        }
+        @media (max-width: 768px) {
+            .navbar .container {
+                gap: 0.8rem;
+            }
+            .nav-main {
+                flex-direction: column;
+                align-items: stretch;
+                margin-bottom: 0.7rem;
+            }
+            .nav-top-left {
+                justify-content: space-between;
+            }
+            .nav-top-right {
+                justify-content: flex-end;
+            }
+            .menu-toggle {
+                width: 36px;
+                height: 36px;
+            }
+        }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container">
+        <div class="nav-main">
+            <div class="nav-top-left">
+                <button id="menu-toggle" class="menu-toggle" type="button" aria-label="Открыть меню">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <a class="navbar-brand" href="{% url 'question_list' %}">
+                    <i class="fas fa-question-circle"></i> Q&A
+                </a>
+            </div>
+            <div class="nav-top-right">
+                <button id="theme-toggle" type="button" aria-label="Переключить тему">🌙</button>
+            </div>
+        </div>
+        <form method="get" action="{% url 'question_list' %}" class="nav-search">
+            <div class="search-wrap">
+                <i class="fas fa-search"></i>
+                <input
+                    type="text"
+                    name="q"
+                    class="search-input"
+                    placeholder="Найдите вопрос, тему или автора"
+                    value="{{ search_query }}"
+                >
+                <button type="submit" class="search-btn">Найти</button>
+            </div>
+        </form>
+    </div>
+</nav>
+
+<div id="side-overlay" class="side-overlay"></div>
+<aside id="side-drawer" class="side-drawer" aria-hidden="true">
+    <div class="drawer-head">
+        <h5 class="drawer-title">Меню</h5>
+        <button id="drawer-close" class="drawer-close" type="button" aria-label="Закрыть меню">×</button>
+    </div>
+    <div class="drawer-links">
+        {% if user.is_authenticated %}
+            <a class="drawer-link" href="{% url 'profile' user.username %}">
+                <i class="fas fa-user mr-2"></i> Профиль
+            </a>
+            <a class="drawer-link" href="{% url 'logout' %}">
+                <i class="fas fa-sign-out-alt mr-2"></i> Выйти
+            </a>
+        {% else %}
+            <a class="drawer-link" href="{% url 'login' %}">
+                <i class="fas fa-sign-in-alt mr-2"></i> Войти
+            </a>
+            <a class="drawer-link" href="{% url 'register' %}">
+                <i class="fas fa-user-plus mr-2"></i> Регистрация
+            </a>
+        {% endif %}
+        <a class="drawer-link" href="{% url 'random_question' %}">
+            <i class="fas fa-random mr-2"></i> Случайный вопрос
+        </a>
+    </div>
+</aside>
+
+<div class="container">
+    {% if messages %}
+        <div style="margin-top: 1rem;">
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% block content %}
+    {% endblock %}
+</div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+<script>
+    (function() {
+        const btn = document.getElementById('theme-toggle');
+        const root = document.documentElement;
+        if (!btn || !root) return;
+        const saved = localStorage.getItem('theme');
+        const initialTheme = saved === 'dark' ? 'dark' : 'light';
+        root.setAttribute('data-theme', initialTheme);
+        btn.textContent = initialTheme === 'dark' ? '☀️' : '🌙';
+
+        btn.addEventListener('click', () => {
+            const current = root.getAttribute('data-theme');
+            const next = current === 'dark' ? 'light' : 'dark';
+            root.setAttribute('data-theme', next);
+            localStorage.setItem('theme', next);
+            btn.textContent = next === 'dark' ? '☀️' : '🌙';
+        });
+    })();
+
+    (function() {
+        const menuBtn = document.getElementById('menu-toggle');
+        const drawer = document.getElementById('side-drawer');
+        const overlay = document.getElementById('side-overlay');
+        const closeBtn = document.getElementById('drawer-close');
+        if (!menuBtn || !drawer || !overlay || !closeBtn) return;
+
+        function openDrawer() {
+            drawer.classList.add('open');
+            overlay.classList.add('open');
+            drawer.setAttribute('aria-hidden', 'false');
+        }
+        function closeDrawer() {
+            drawer.classList.remove('open');
+            overlay.classList.remove('open');
+            drawer.setAttribute('aria-hidden', 'true');
+        }
+
+        menuBtn.addEventListener('click', openDrawer);
+        closeBtn.addEventListener('click', closeDrawer);
+        overlay.addEventListener('click', closeDrawer);
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') closeDrawer();
+        });
+    })();
+
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type} alert-fixed`;
+        notification.innerHTML = `
+            <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} mr-2"></i>
+            ${message}
+            <button type="button" class="close" style="float:right;">&times;</button>
+        `;
+        document.body.appendChild(notification);
+        const closeBtn = notification.querySelector('.close');
+        closeBtn.addEventListener('click', () => fadeOutAndRemove(notification));
+        setTimeout(() => fadeOutAndRemove(notification), 4000);
+    }
+
+    function fadeOutAndRemove(element) {
+        if (!element) return;
+        element.classList.add('alert-fade-out');
+        setTimeout(() => {
+            element.remove();
+        }, 350);
+    }
+
+    (function () {
+        const alerts = document.querySelectorAll('.alert:not(.alert-fixed)');
+        alerts.forEach((alertEl) => {
+            setTimeout(() => {
+                fadeOutAndRemove(alertEl);
+            }, 4000);
+        });
+    })();
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

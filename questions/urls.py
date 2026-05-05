@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import (
     question_list,
+    random_question,
     add_question,
     question_detail,
     register,
@@ -13,6 +14,7 @@ from .views import (
 
 urlpatterns = [
     path('', question_list, name='question_list'),
+    path('random/', random_question, name='random_question'),
     path('add/', add_question, name='add_question'),
     path('question/<int:pk>/', question_detail, name='question_detail'),
 

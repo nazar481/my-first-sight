@@ -1,565 +1,174 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Q&A — Главная / Ответы Mail.ru стиль</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        /* Все ваши стили остаются без изменений */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+{% extends "base.html" %}
 
-        body {
-            background-color: #f0f2f5;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            color: #1a1a1a;
-        }
+{% block extra_css %}
+<style>
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin: 1rem 0 2rem;
+        gap: 1rem;
+    }
+    .ask-btn {
+        text-decoration: none;
+        padding: 0.8rem 1.6rem;
+    }
+    .question-meta {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 1rem;
+    }
+    .author-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #1a4b8c, #0d2b5c);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        font-weight: bold;
+    }
+    .author-name { font-weight: 600; color: var(--text); }
+    .post-date { font-size: 0.8rem; color: var(--muted-light); }
+    .stats { display: flex; gap: 1rem; margin-left: auto; }
+    .pagination-wrap {
+        margin-top: 2rem;
+        display: flex;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: wrap;
+    }
+    .page-pill {
+        padding: 0.45rem 0.95rem;
+        background: var(--card-bg);
+        border-radius: 999px;
+        border: 1px solid var(--card-border);
+        color: var(--text);
+        text-decoration: none;
+    }
+    .page-pill.active {
+        background: linear-gradient(135deg, #1a4b8c, #0d2b5c);
+        color: #fff;
+        border-color: transparent;
+    }
+    .page-pill.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+    }
+    @media (max-width: 768px) {
+        .page-header { flex-direction: column; align-items: flex-start; }
+        .stats { margin-left: 0; }
+    }
+</style>
+{% endblock %}
 
-        .navbar {
-            background: linear-gradient(135deg, #1a4b8c 0%, #0d2b5c 100%);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-            padding: 0.7rem 0;
-        }
-
-        .navbar-brand {
-            font-size: 1.6rem;
-            font-weight: 700;
-            color: white !important;
-            display: flex;
-            align-items: center;
-            letter-spacing: -0.5px;
-        }
-
-        .navbar-brand i {
-            color: #ffd700;
-            margin-right: 10px;
-            font-size: 1.8rem;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.2));
-        }
-
-        .navbar-nav .nav-link {
-            color: rgba(255,255,255,0.9) !important;
-            font-weight: 500;
-            padding: 0.5rem 1.2rem !important;
-            border-radius: 30px;
-            transition: all 0.3s;
-            margin: 0 2px;
-            font-size: 0.95rem;
-        }
-
-        .navbar-nav .nav-link:hover {
-            background: rgba(255,255,255,0.15);
-            color: white !important;
-            transform: translateY(-1px);
-        }
-
-        .navbar-nav .nav-link i {
-            margin-right: 6px;
-            font-size: 0.9rem;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 15px;
-        }
-
-        .breadcrumb {
-            background: transparent;
-            padding: 1.5rem 0 1rem;
-            margin: 0;
-        }
-
-        .breadcrumb-item a {
-            color: #1a4b8c;
-            text-decoration: none;
-        }
-
-        .breadcrumb-item.active {
-            color: #6c757d;
-        }
-
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 1rem 0 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #e0e7ed;
-        }
-
-        .page-header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin: 0;
-            position: relative;
-        }
-
-        .page-header h1:after {
-            content: '';
-            display: block;
-            width: 60px;
-            height: 4px;
-            background: #1a4b8c;
-            margin-top: 8px;
-            border-radius: 2px;
-        }
-
-        .btn-ask {
-            background: linear-gradient(135deg, #1a4b8c, #0d2b5c);
-            color: white;
-            border: none;
-            padding: 0.8rem 2rem;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 1rem;
-            box-shadow: 0 4px 12px rgba(26,75,140,0.3);
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            text-decoration: none;
-        }
-
-        .btn-ask:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(26,75,140,0.4);
-            color: white;
-            text-decoration: none;
-        }
-
-        .alert {
-            border-radius: 12px;
-            border: none;
-            padding: 1rem 1.5rem;
-            margin-bottom: 1.5rem;
-            font-weight: 500;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-
-        .alert-success {
-            background: linear-gradient(135deg, #e8f5e9, #c8e6c9);
-            color: #2e7d32;
-        }
-
-        .alert-info {
-            background: linear-gradient(135deg, #e3f2fd, #bbdefb);
-            color: #0d47a1;
-        }
-
-        .alert-warning {
-            background: linear-gradient(135deg, #fff3e0, #ffe0b2);
-            color: #e65100;
-        }
-
-        .question-card {
-            background: white;
-            border-radius: 16px;
-            padding: 1.5rem;
-            margin-bottom: 1.2rem;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-            border: 1px solid #eaeef2;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .question-card:hover {
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
-            transform: translateY(-2px);
-            border-color: #1a4b8c;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .question-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            margin-bottom: 0.8rem;
-        }
-
-        .question-title a {
-            color: #1a1a1a;
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        .question-title a:hover {
-            color: #1a4b8c;
-        }
-
-        .question-preview {
-            color: #5e6f7d;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: 1rem;
-            padding-bottom: 1rem;
-            border-bottom: 1px solid #eaeef2;
-        }
-
-        .question-meta {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-        }
-
-        .author-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #1a4b8c, #0d2b5c);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            font-size: 1.1rem;
-            text-transform: uppercase;
-        }
-
-        .author-details {
-            display: flex;
-            flex-direction: column;
-        }
-
-        .author-name {
-            font-weight: 600;
-            color: #2c3e50;
-            font-size: 0.95rem;
-        }
-
-        .post-date {
-            font-size: 0.8rem;
-            color: #8a9aa8;
-        }
-
-        .post-date i {
-            margin-right: 4px;
-            font-size: 0.7rem;
-        }
-
-        .stats {
-            display: flex;
-            gap: 1.2rem;
-            margin-left: auto;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            color: #5e6f7d;
-            font-size: 0.9rem;
-        }
-
-        .stat-item i {
-            color: #1a4b8c;
-            font-size: 1rem;
-        }
-
-        .like-section .btn {
-            border-radius: 50px;
-            padding: 0.4rem 1.2rem;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.3s;
-            border: 1px solid #ffd700;
-            background: white;
-            color: #1a1a1a;
-        }
-
-        .like-section .btn:hover {
-            background: #fff9e6;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(255,215,0,0.3);
-        }
-
-        .like-section .btn-warning {
-            background: #ffd700;
-            border-color: #ffd700;
-            color: #1a1a1a;
-        }
-
-        .like-section .btn-warning:hover {
-            background: #ffcd00;
-        }
-
-        .like-section .badge {
-            background: rgba(255,255,255,0.5);
-            color: #1a1a1a;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-
-        .pagination {
-            margin-top: 2rem;
-            justify-content: center;
-        }
-
-        .pagination .page-link {
-            border: none;
-            background: white;
-            color: #1a4b8c;
-            font-weight: 500;
-            padding: 0.6rem 1.2rem;
-            margin: 0 3px;
-            border-radius: 30px !important;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: all 0.3s;
-        }
-
-        .pagination .page-link:hover {
-            background: #1a4b8c;
-            color: white;
-            transform: translateY(-2px);
-        }
-
-        .pagination .page-item.active .page-link {
-            background: linear-gradient(135deg, #1a4b8c, #0d2b5c);
-            color: white;
-        }
-
-        @media (max-width: 768px) {
-            .page-header {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 1rem;
-            }
-
-            .question-meta {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .stats {
-                margin-left: 0;
-                width: 100%;
-                justify-content: space-between;
-            }
-
-            .like-section {
-                width: 100%;
-            }
-
-            .like-section .btn {
-                width: 100%;
-                justify-content: center;
-            }
-        }
-    </style>
-</head>
-<body>
-    <nav class="navbar navbar-expand-lg navbar-dark">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'question_list' %}">
-                <i class="fas fa-question-circle"></i>
-                Q&A
+{% block content %}
+    <!-- Заголовок и кнопка -->
+    <div class="page-header">
+        <h1 style="color: var(--header-color);">Все вопросы</h1>
+        {% if user.is_authenticated %}
+            <a href="{% url 'add_question' %}" class="btn-pill btn-primary-gradient ask-btn">
+                <i class="fas fa-plus-circle"></i> Задать вопрос
             </a>
+        {% endif %}
+    </div>
 
-            <div class="navbar-nav ml-auto">
+    <!-- Список вопросов -->
+    {% for question in questions %}
+    <div class="question-card">
+        <h2 class="question-title">
+            <a href="{% url 'question_detail' question.pk %}">{{ question.title }}</a>
+        </h2>
+        <div class="question-preview">{{ question.content|truncatewords:30 }}</div>
+
+        <div class="question-meta">
+            <div class="author-info">
+                <div class="avatar">
+                    {{ question.author.username|first|upper }}
+                </div>
+                <div>
+                    <span class="author-name">{{ question.author.username }}</span>
+                    <span class="post-date">
+                        <i class="far fa-clock"></i> {{ question.created_at|date:"d.m.Y H:i" }}
+                    </span>
+                </div>
+            </div>
+            <div class="stats">
+                <span class="stat-item"><i class="fas fa-eye"></i> {{ question.views_count }}</span>
+                <span class="stat-item"><i class="fas fa-comment"></i> {{ question.answers_count }}</span>
+            </div>
+            <div class="like-section">
                 {% if user.is_authenticated %}
-                    <a class="nav-link" href="{% url 'profile' user.username %}">
-                        <i class="fas fa-user"></i>{{ user.username }}
-                    <a class="nav-link" href="{% url 'logout' %}">
-                        <i class="fas fa-sign-out-alt"></i>Выйти
-                    </a>
+                    <button class="btn {% if question.user_liked %}btn-warning{% else %}btn-outline-warning{% endif %} like-btn"
+                            data-question-id="{{ question.pk }}"
+                            data-liked="{{ question.user_liked|yesno:'true,false' }}">
+                        <i class="{% if question.user_liked %}fas{% else %}far{% endif %} fa-star mr-1"></i>
+                        {% if question.user_liked %}Убрать звезду{% else %}Поставить звезду{% endif %}
+                        <span class="badge badge-light ml-1 likes-count">{{ question.likes_count }}</span>
+                    </button>
                 {% else %}
-                    <a class="nav-link" href="{% url 'login' %}">
-                        <i class="fas fa-sign-in-alt"></i>Войти
-                    </a>
-                    <a class="nav-link" href="{% url 'register' %}">
-                        <i class="fas fa-user-plus"></i>Регистрация
+                    <a href="{% url 'login' %}" class="btn btn-outline-secondary">
+                        <i class="far fa-star mr-1"></i>
+                        <span class="badge badge-light ml-1">{{ question.likes_count }}</span>
                     </a>
                 {% endif %}
             </div>
         </div>
-    </nav>
-
-    <div class="container">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item active" aria-current="page">Все вопросы</li>
-            </ol>
-        </nav>
-
-        <!-- Заголовок -->
-        <div class="page-header">
-            <h1>Все вопросы</h1>
-            {% if user.is_authenticated %}
-                <a href="{% url 'add_question' %}" class="btn-ask">
-                    <i class="fas fa-plus-circle"></i>
-                    Задать вопрос
-                </a>
-            {% endif %}
-        </div>
-
-
-        <!-- Фильтр вопросов -->
-        <div class="filter-section mb-4">
-            <form method="get" action="." class="form-inline flex-wrap justify-content-between">
-                <div class="d-flex flex-wrap align-items-center gap-2">
-                    <!-- Поиск по тексту -->
-                    <input type="text" name="q" class="form-control mb-2 mr-sm-2" placeholder="Поиск по вопросам..." value="{{ request.GET.q }}">
-
-                    <!-- Фильтр по автору -->
-                    <select name="author" class="form-control mb-2 mr-sm-2">
-                        <option value="">Все авторы</option>
-                        {% for user in users %}
-                            <option value="{{ user.id }}" {% if request.GET.author == user.id|stringformat:"s" %}selected{% endif %}>
-                                {{ user.username }}
-                            </option>
-                        {% endfor %}
-                    </select>
-
-                    <!-- Фильтр по периоду -->
-                    <select name="period" class="form-control mb-2 mr-sm-2">
-                        <option value="">За всё время</option>
-                        <option value="today" {% if request.GET.period == 'today' %}selected{% endif %}>За сегодня</option>
-                        <option value="week" {% if request.GET.period == 'week' %}selected{% endif %}>За неделю</option>
-                        <option value="month" {% if request.GET.period == 'month' %}selected{% endif %}>За месяц</option>
-                    </select>
-
-                    <!-- Фильтр по наличию ответов -->
-                    <select name="has_answers" class="form-control mb-2 mr-sm-2">
-                        <option value="">Любые</option>
-                        <option value="yes" {% if request.GET.has_answers == 'yes' %}selected{% endif %}>С ответами</option>
-                        <option value="no" {% if request.GET.has_answers == 'no' %}selected{% endif %}>Без ответов</option>
-                    </select>
-
-                    <!-- Сортировка -->
-                    <select name="sort" class="form-control mb-2 mr-sm-2">
-                        <option value="-created_at" {% if request.GET.sort == '-created_at' or not request.GET.sort %}selected{% endif %}>Новые</option>
-                        <option value="created_at" {% if request.GET.sort == 'created_at' %}selected{% endif %}>Старые</option>
-                        <option value="-likes_count" {% if request.GET.sort == '-likes_count' %}selected{% endif %}>Популярные (лайки)</option>
-                        <option value="-views_count" {% if request.GET.sort == '-views_count' %}selected{% endif %}>Просмотры</option>
-                    </select>
-                </div>
-
-                <div class="d-flex">
-                    <button type="submit" class="btn btn-primary mb-2 mr-2">Применить</button>
-                    <a href="{% url 'question_list' %}" class="btn btn-secondary mb-2">Сбросить</a>
-                </div>
-            </form>
-        </div>
-
-        <!-- Список вопросов -->
-        {% for question in questions %}
-        <div class="question-card">
-            <h2 class="question-title">
-                <a href="{% url 'question_detail' question.pk %}">{{ question.title }}</a>
-            </h2>
-            <div class="question-preview">
-                {{ question.content|truncatewords:30 }}
-            </div>
-
-            <div class="question-meta">
-                <div class="author-info">
-                    <div class="avatar">{{ question.author.username|first|upper }}</div>
-                    <div class="author-details">
-                        <span class="author-name">{{ question.author.username }}</span>
-                        <span class="post-date">
-                            <i class="far fa-clock"></i>{{ question.created_at|date:"d.m.Y H:i" }}
-                        </span>
-                    </div>
-                </div>
-
-                <div class="stats">
-                    <span class="stat-item">
-                        <i class="fas fa-eye"></i> {{ question.views_count }}
-                    </span>
-                    <span class="stat-item">
-                        <i class="fas fa-comment"></i> {{ question.answers.count }}
-                    </span>
-                </div>
-
-                <div class="like-section">
-                    {% if user.is_authenticated %}
-                        <button class="btn {% if question.user_liked %}btn-warning{% else %}btn-outline-warning{% endif %} like-btn"
-                                data-question-id="{{ question.pk }}"
-                                data-liked="{{ question.user_liked|yesno:'true,false' }}">
-                            <i class="{% if question.user_liked %}fas{% else %}far{% endif %} fa-star mr-1"></i>
-                            {% if question.user_liked %}Убрать звезду{% else %}Поставить звезду{% endif %}
-                            <span class="badge badge-light ml-1 likes-count">{{ question.likes.count }}</span>
-                        </button>
-                    {% else %}
-                        <a href="{% url 'login' %}" class="btn btn-outline-secondary">
-                            <i class="far fa-star mr-1"></i>
-                            <span class="badge badge-light ml-1">{{ question.likes.count }}</span>
-                        </a>
-                    {% endif %}
-                </div>
-            </div>
-        </div>
-        {% empty %}
-        <div class="alert alert-info">
-            <i class="fas fa-info-circle mr-2"></i>
-            Пока нет вопросов. Будьте первым, кто задаст вопрос!
-        </div>
-        {% endfor %}
-
-        <!-- Пагинация -->
-        <div class="pagination">
-            <!-- Ссылка на предыдущую страницу -->
-
-    {% if page_obj.has_previous %}
-        <li class="page-item">
-            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" aria-label="Предыдущая">
-                <span aria-hidden="true">«</span>
-            </a>
-        </li>
-    {% else %}
-        <li class="page-item disabled">
-            <span class="page-link" aria-hidden="true">«</span>
-        </li>
-    {% endif %}
-
-        <!-- Все номера страниц -->
-    {% for num in page_obj.paginator.page_range %}
-        {% if page_obj.number == num %}
-            <span class="page-link current active">{{ num }}</span>
+    </div>
+    {% empty %}
+    <div class="alert alert-info">
+        <i class="fas fa-info-circle mr-2"></i>
+        {% if search_query %}
+            По запросу «{{ search_query }}» ничего не найдено. Попробуйте другие слова или проверьте написание.
         {% else %}
-            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+            Пока нет вопросов. Будьте первым, кто задаст вопрос!
         {% endif %}
+    </div>
     {% endfor %}
 
-    <!-- Кнопка "Следующая" -->
-    {% if page_obj.has_next %}
-        <a class="page-link" href="?page={{ page_obj.next_page_number }}" aria-label="Следующая">
-            <span aria-hidden="true">»</span>
-        </a>
-    {% else %}
-        <span class="page-link disabled" aria-disabled="true">»</span>
-    {% endif %}
-</div>
+    <!-- Пагинация -->
+    <div class="pagination-wrap">
+        {% if page_obj.has_previous %}
+            <a class="page-pill" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}">«</a>
+        {% else %}
+            <span class="page-pill disabled">«</span>
+        {% endif %}
 
+        {% for num in page_obj.paginator.page_range %}
+            {% if page_obj.number == num %}
+                <span class="page-pill active">{{ num }}</span>
+            {% else %}
+                <a class="page-pill" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+            <a class="page-pill" href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}">»</a>
+        {% else %}
+            <span class="page-pill disabled">»</span>
+        {% endif %}
+    </div>
 
     {% csrf_token %}
+{% endblock %}
 
-    <!-- Скрипты  -->
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
+{% block extra_js %}
+<script>
+    // ЛАЙКИ (AJAX)
+    (function() {
         const likeButtons = document.querySelectorAll('.like-btn');
-
         likeButtons.forEach(button => {
-            button.addEventListener('click', function() {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
                 const questionId = this.dataset.questionId;
                 const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-
                 const originalHTML = this.innerHTML;
                 this.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Загрузка...';
                 this.disabled = true;
@@ -575,15 +184,14 @@
                 .then(response => response.json())
                 .then(data => {
                     this.disabled = false;
-
                     if (data.error) {
                         this.innerHTML = originalHTML;
                         alert('Ошибка: ' + data.error);
                         return;
                     }
-
                     this.dataset.liked = data.liked;
-
+                    const countSpan = this.querySelector('.likes-count');
+                    if (countSpan) countSpan.textContent = data.likes_count;
                     if (data.liked) {
                         this.innerHTML = '<i class="fas fa-star mr-1"></i>Убрать звезду <span class="badge badge-light ml-1 likes-count">' + data.likes_count + '</span>';
                         this.classList.remove('btn-outline-warning');
@@ -593,8 +201,6 @@
                         this.classList.remove('btn-warning');
                         this.classList.add('btn-outline-warning');
                     }
-
-                    showNotification(data.liked ? 'Вы поставили звезду вопросу!' : 'Вы убрали звезду с вопроса', data.liked ? 'success' : 'info');
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -604,38 +210,6 @@
                 });
             });
         });
-
-        function showNotification(message, type) {
-            const notification = document.createElement('div');
-            notification.className = `alert alert-${type}`;
-            notification.style.position = 'fixed';
-            notification.style.top = '20px';
-            notification.style.right = '20px';
-            notification.style.zIndex = '9999';
-            notification.style.minWidth = '300px';
-            notification.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)';
-            notification.style.animation = 'slideIn 0.3s ease';
-            notification.innerHTML = `
-                <i class="fas fa-${type === 'success' ? 'check-circle' : 'info-circle'} mr-2"></i>
-                ${message}
-                <button type="button" class="close ml-3" style="outline: none;">&times;</button>
-            `;
-
-            document.body.appendChild(notification);
-
-            const closeBtn = notification.querySelector('.close');
-            closeBtn.addEventListener('click', () => notification.remove());
-
-            setTimeout(() => {
-                if (notification.parentNode) notification.remove();
-            }, 3000);
-        }
-    });
-    </script>
-
-
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-</body>
-</html>
+    })();
+</script>
+{% endblock %}

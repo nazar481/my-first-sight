@@ -22,3 +22,11 @@ class AnswerForm(forms.ModelForm):
     class Meta:
         model = Answer
         fields = ['content']
+        widgets = {
+            'content': forms.Textarea(
+                attrs={
+                    'placeholder': 'Ваш ответ...',
+                    'rows': 6,
+                }
+            ),
+        }
