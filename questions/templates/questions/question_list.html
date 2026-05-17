@@ -36,6 +36,9 @@
         font-weight: bold;
     }
     .author-name { font-weight: 600; color: var(--text); }
+    .author-name a { color: var(--text); text-decoration: none; }
+    .author-name a:hover { color: #1a4b8c; }
+    .author-title { font-size: 0.8rem; color: #4ec5b0; font-style: italic; margin-top: 0.2rem; }
     .post-date { font-size: 0.8rem; color: var(--muted-light); }
     .stats { display: flex; gap: 1rem; margin-left: auto; }
     .pagination-wrap {
@@ -94,7 +97,8 @@
                     {{ question.author.username|first|upper }}
                 </div>
                 <div>
-                    <span class="author-name">{{ question.author.username }}</span>
+                    <span class="author-name"><a href="{% url 'profile' question.author.username %}">{{ question.author.username }}</a></span>
+                    {% if question.author.profile.get_title %}<div class="author-title">{{ question.author.profile.get_title }}</div>{% endif %}
                     <span class="post-date">
                         <i class="far fa-clock"></i> {{ question.created_at|date:"d.m.Y H:i" }}
                     </span>

@@ -44,6 +44,9 @@
         text-transform: uppercase;
     }
     .author-name { font-weight: 600; font-size: 1.1rem; }
+    .author-name a { color: var(--text); text-decoration: none; }
+    .author-name a:hover { color: #1a4b8c; }
+    .author-title { font-size: 0.9rem; color: #4ec5b0; font-style: italic; margin-top: 0.2rem; }
     .post-date { color: var(--muted-light); font-size: 0.9rem; }
     .question-stats { display: flex; gap: 1rem; margin-left: auto; }
     .stat-badge {
@@ -125,6 +128,13 @@
         gap: 15px;
         margin-bottom: 1rem;
     }
+    .answer-header a {
+        color: var(--text);
+        text-decoration: none;
+    }
+    .answer-header a:hover {
+        color: #1a4b8c;
+    }
     .avatar-small {
         width: 40px; height: 40px;
         border-radius: 50%;
@@ -137,6 +147,7 @@
         text-transform: uppercase;
     }
     .answer-date { margin-left: auto; font-size: 0.85rem; color: var(--muted-light); }
+    .answer-author-title { font-size: 0.8rem; color: #4ec5b0; font-style: italic; margin-top: 0.2rem; }
     .answer-content { line-height: 1.7; }
     .empty-answers { text-align: center; padding: 3rem; background: var(--card-bg); border-radius: 20px; }
     @media (max-width: 768px) {
@@ -166,7 +177,8 @@
     <div class="question-author">
         <div class="avatar-large">{{ question.author.username|first|upper }}</div>
         <div>
-            <div class="author-name">{{ question.author.username }}</div>
+            <div class="author-name"><a href="{% url 'profile' question.author.username %}">{{ question.author.username }}</a></div>
+            {% if question.author.profile.get_title %}<div class="author-title">{{ question.author.profile.get_title }}</div>{% endif %}
             <div class="post-date"><i class="far fa-calendar-alt"></i> {{ question.created_at|date:"d.m.Y" }} <i class="far fa-clock ml-2"></i> {{ question.created_at|date:"H:i" }}</div>
         </div>
         <div class="question-stats">
@@ -212,20 +224,34 @@
 <div class="answer-card">
     <div class="answer-header">
         <div class="avatar-small">{{ answer.author.username|first|upper }}</div>
-        <span>{{ answer.author.username }}</span>
+        <div>
+            <span><a href="{% url 'profile' answer.author.username %}">{{ answer.author.username }}</a></span>
+            {% if answer.author.profile.get_title %}<div class="answer-author-title">{{ answer.author.profile.get_title }}</div>{% endif %}
+        </div>
         <span class="answer-date"><i class="far fa-clock"></i> {{ answer.created_at|date:"d.m.Y H:i" }}</span>
     </div>
     {% if question.accepted_answer_id == answer.id %}
         <div class="alert alert-success py-1 px-2 mb-2"><i class="fas fa-check-circle"></i> Лучший ответ</div>
     {% endif %}
+    {% if answer.is_bad %}
+        <div class="alert alert-danger py-1 px-2 mb-2"><i class="fas fa-exclamation-triangle"></i> Плохой ответ </div>
+    {% endif %}
     <div class="answer-content">{{ answer.content|linebreaks }}</div>
     {% if user.is_authenticated and user == question.author %}
-        <form method="POST" action="{% url 'set_accepted_answer' question.pk answer.pk %}" class="answer-actions">
-            {% csrf_token %}
-            <button type="submit" class="btn btn-sm {% if question.accepted_answer_id == answer.id %}btn-outline-secondary{% else %}btn-success{% endif %}">
-                {% if question.accepted_answer_id == answer.id %}Снять лучший ответ{% else %}Выбрать лучшим{% endif %}
-            </button>
-        </form>
+        <div class="answer-actions-group" style="display:flex; flex-wrap:wrap; gap:0.5rem; margin-top:0.75rem;">
+            <form method="POST" action="{% url 'set_accepted_answer' question.pk answer.pk %}" class="answer-actions">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm {% if question.accepted_answer_id == answer.id %}btn-outline-secondary{% else %}btn-success{% endif %}">
+                    {% if question.accepted_answer_id == answer.id %}Снять лучший ответ{% else %}Выбрать лучшим{% endif %}
+                </button>
+            </form>
+            <form method="POST" action="{% url 'set_bad_answer' question.pk answer.pk %}" class="answer-actions">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm {% if answer.is_bad %}btn-outline-danger{% else %}btn-danger{% endif %}">
+                    {% if answer.is_bad %}Снять метку плохого{% else %}Отметить плохим {% endif %}
+                </button>
+            </form>
+        </div>
     {% endif %}
 </div>
 {% empty %}

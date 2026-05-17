@@ -9,7 +9,9 @@ from .views import (
     logout_view,
     ProfileView,
     toggle_like,
-    set_accepted_answer
+    set_accepted_answer,
+    set_bad_answer,
+    edit_profile
 )
 
 urlpatterns = [
@@ -25,7 +27,9 @@ urlpatterns = [
     path('logout/', logout_view, name='logout'),
 
     # Profile
+    path('profile/edit/', edit_profile, name='edit_profile'),
     path('profile/<str:username>/', ProfileView.as_view(), name='profile'),
     path('<int:pk>/toggle_like/', toggle_like, name='toggle_like'),
     path('question/<int:question_pk>/accept-answer/<int:answer_pk>/', set_accepted_answer, name='set_accepted_answer'),
+    path('question/<int:question_pk>/bad-answer/<int:answer_pk>/', set_bad_answer, name='set_bad_answer'),
 ]

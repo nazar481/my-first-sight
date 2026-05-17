@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import F
 from django.contrib.auth.models import User
 
 
@@ -19,11 +20,9 @@ class Question(models.Model):
     def __str__(self):
         return self.title
 
-    # Метод для получения количества лайков
     def likes_count(self):
         return self.likes.count()
 
-    # Метод для проверки, лайкнул ли пользователь вопрос
     def is_liked_by(self, user):
         if not user.is_authenticated:
             return False
@@ -51,6 +50,7 @@ class Answer(models.Model):
     content = models.TextField()
     author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='answers')
     created_at = models.DateTimeField(auto_now_add=True)
+    is_bad = models.BooleanField(default=False)
 
     def __str__(self):
         return f"Ответ на: {self.question.title[:50]}"
@@ -67,9 +67,35 @@ class Profile(models.Model):
     bio = models.TextField(blank=True)
     location = models.CharField(max_length=100, blank=True)
     website = models.URLField(blank=True)
+    chosen_title = models.CharField(max_length=100, blank=True, null=True, help_text='Выбранный титул из ранее полученных')
 
     def __str__(self):
         return self.user.username
+
+    def get_score(self):
+        answers = self.user.answers
+        answer_count = answers.count()
+        accepted_count = answers.filter(question__accepted_answer_id=F('id')).count()
+        bad_count = answers.filter(is_bad=True).count()
+        score = answer_count + accepted_count * 10 - bad_count * 2
+        return max(score, 0)
+
+    # ИСПРАВЛЕНО: метод НЕ принимает аргументов
+    def get_title(self):
+        if self.chosen_title:
+            return self.chosen_title
+        score = self.get_score()
+        if score >= 100:
+            return 'Легенда ответов'
+        if score >= 50:
+            return 'Гуру помощи'
+        if score >= 25:
+            return 'Эксперт'
+        if score >= 10:
+            return 'Знаток'
+        if score >= 1:
+            return 'Новичок'
+        return 'Начинающий'
 
     @classmethod
     def get_or_create(cls, user):
@@ -83,15 +109,13 @@ class Profile(models.Model):
 
 
 class QuestionLike(models.Model):
-    #Модель для лайков (звезд) вопросов
     question = models.ForeignKey(Question, related_name='likes', on_delete=models.CASCADE)
     user = models.ForeignKey(User, related_name='question_likes', on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        unique_together = ['question', 'user']  # Один пользователь может лайкнуть вопрос только один раз
+        unique_together = ['question', 'user']
         ordering = ['-created_at']
 
     def __str__(self):
         return f"{self.user.username} likes {self.question.title}"
-

@@ -13,19 +13,16 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.views import View
 
-from .forms import QuestionForm, AnswerForm, UserRegisterForm
+from .forms import QuestionForm, AnswerForm, UserRegisterForm, ProfileForm
 from .models import Question, Answer, Profile, QuestionLike
 
 
 def question_list(request):
-    # Базовый queryset
-    questions = Question.objects.select_related('author').annotate(
+    questions = Question.objects.select_related('author', 'author__profile').annotate(
         likes_count=Count('likes', distinct=True),
         answers_count=Count('answers', distinct=True),
     )
 
-    # Поиск (основной сценарий). Старые GET-параметры фильтров больше не учитываем,
-    # иначе они "залипают" в URL и режут выдачу, хотя в интерфейсе фильтров уже нет.
     q = request.GET.get('q', '')
     q = q.strip()
     if q:
@@ -60,10 +57,8 @@ def question_list(request):
         else:
             questions = apply_or_search(questions, terms)
 
-    # Сортировка по умолчанию (стабильно и предсказуемо для списка)
     questions = questions.order_by('-created_at')
 
-    # Пагинация (10 вопросов на страницу)
     paginator = Paginator(questions, 10)
     page_number = request.GET.get('page', 1)
     try:
@@ -73,7 +68,6 @@ def question_list(request):
     except EmptyPage:
         page_obj = paginator.page(paginator.num_pages)
 
-    # Добавляем флаг user_liked для вопросов на текущей странице без N+1 запросов
     if request.user.is_authenticated:
         question_ids = [question.id for question in page_obj.object_list]
         liked_ids = set(
@@ -88,19 +82,17 @@ def question_list(request):
         for question in page_obj.object_list:
             question.user_liked = False
 
-    # Список пользователей для фильтра
     users = User.objects.all()
 
     query_params = request.GET.copy()
     query_params.pop('page', None)
-    # В пагинации оставляем только поисковый запрос, чтобы не тащить "мертвые" параметры.
     for key in list(query_params.keys()):
         if key != 'q':
             query_params.pop(key, None)
 
     context = {
-        'page_obj': page_obj,                # основной объект пагинации
-        'questions': page_obj.object_list,   # если в шаблоне используется переменная questions
+        'page_obj': page_obj,
+        'questions': page_obj.object_list,
         'users': users,
         'querystring': query_params.urlencode(),
         'search_query': q,
@@ -115,7 +107,6 @@ def random_question(request):
         return redirect('question_list')
     pk = random.choice(pks)
     return redirect('question_detail', pk=pk)
-
 
 
 @login_required
@@ -134,8 +125,8 @@ def add_question(request):
 
 
 def question_detail(request, pk):
-    question = get_object_or_404(Question.objects.select_related('author'), pk=pk)
-    answers = question.answers.annotate(
+    question = get_object_or_404(Question.objects.select_related('author', 'author__profile'), pk=pk)
+    answers = question.answers.select_related('author', 'author__profile').annotate(
         accepted_order=Case(
             When(pk=question.accepted_answer_id, then=Value(0)),
             default=Value(1),
@@ -143,10 +134,8 @@ def question_detail(request, pk):
         )
     ).order_by('accepted_order', '-created_at')
 
-    # Проверяем, лайкнул ли текущий пользователь этот вопрос
     user_liked = question.is_liked_by(request.user) if request.user.is_authenticated else False
 
-    # Увеличиваем счетчик просмотров только при открытии страницы
     if request.method == 'GET':
         Question.objects.filter(pk=question.pk).update(views_count=F('views_count') + 1)
         question.refresh_from_db(fields=['views_count'])
@@ -195,25 +184,38 @@ def set_accepted_answer(request, question_pk, answer_pk):
 
 
 @login_required
+def set_bad_answer(request, question_pk, answer_pk):
+    if request.method != 'POST':
+        return redirect('question_detail', pk=question_pk)
+
+    question = get_object_or_404(Question, pk=question_pk)
+    answer = get_object_or_404(Answer, pk=answer_pk, question=question)
+
+    if request.user != question.author:
+        messages.error(request, 'Только автор вопроса может отметить ответ как плохой.')
+        return redirect('question_detail', pk=question_pk)
+
+    answer.is_bad = not answer.is_bad
+    answer.save(update_fields=['is_bad'])
+
+    return redirect('question_detail', pk=question_pk)
+
+
+@login_required
 def toggle_like(request, pk):
-    #Обработка лайков/дизлайков
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         question = get_object_or_404(Question, pk=pk)
         user = request.user
 
-        # Проверяем, лайкнул ли уже пользователь
         like_exists = QuestionLike.objects.filter(question=question, user=user).exists()
 
         if like_exists:
-            # Убираем лайк
             QuestionLike.objects.filter(question=question, user=user).delete()
             liked = False
         else:
-            # Добавляем лайк
             QuestionLike.objects.create(question=question, user=user)
             liked = True
 
-        # Получаем обновленное количество лайков
         likes_count = question.likes_count()
 
         return JsonResponse({
@@ -255,11 +257,50 @@ def login_view(request):
 
 @login_required
 def logout_view(request):
-    # Очищаем flash-сообщения, чтобы не тянуть старые уведомления.
     list(messages.get_messages(request))
     logout(request)
     messages.info(request, 'Вы вышли из системы')
     return redirect('login')
+
+
+@login_required
+def edit_profile(request):
+    profile, created = Profile.get_or_create(request.user)
+    profile_score = profile.get_score()
+    
+    thresholds = [
+        (0, 'Начинающий'),
+        (1, 'Новичок'),
+        (10, 'Знаток'),
+        (25, 'Эксперт'),
+        (50, 'Гуру помощи'),
+        (100, 'Легенда ответов'),
+    ]
+    earned_titles = [t for thr, t in thresholds if profile_score >= thr]
+
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=profile)
+        if form.is_valid():
+            form.save()
+            chosen = request.POST.get('chosen_title', '')
+            profile.chosen_title = chosen or None
+            profile.save(update_fields=['chosen_title'])
+            messages.success(request, 'Профиль успешно обновлён')
+            return redirect('profile', username=request.user.username)
+    else:
+        form = ProfileForm(instance=profile)
+
+    score_title = profile.get_title()
+
+    context = {
+        'form': form,
+        'profile': profile,
+        'earned_titles': earned_titles,
+        'selected_title': profile.chosen_title or '',
+        'profile_score': profile_score,
+        'score_title': score_title,
+    }
+    return render(request, 'questions/edit_profile.html', context)
 
 
 class ProfileView(View):
@@ -267,16 +308,23 @@ class ProfileView(View):
         user = get_object_or_404(User, username=username)
         profile, created = Profile.get_or_create(user)
 
-        # Получаем вопросы с аннотациями (один запрос вместо N+1)
         questions = user.questions.annotate(
             likes_count=Count('likes'),
             answers_count=Count('answers')
         ).order_by('-created_at')
 
-        # Ответы (можно тоже оптимизировать, если нужно)
         answers = user.answers.select_related('question').order_by('-created_at')
 
-        # Общее количество звёзд
+        answer_count = answers.count()
+        accepted_count = answers.filter(question__accepted_answer_id=F('id')).count()
+        bad_count = answers.filter(is_bad=True).count()
+        profile_score = answer_count + accepted_count * 10 - bad_count * 2
+        if profile_score < 0:
+            profile_score = 0
+        
+        score_title = profile.get_title()
+        
+        score_percent = min(profile_score, 100)
         total_stars = sum(q.likes_count for q in questions)
 
         context = {
@@ -285,7 +333,12 @@ class ProfileView(View):
             'questions': questions,
             'answers': answers,
             'questions_count': questions.count(),
-            'answers_count': answers.count(),
+            'answers_count': answer_count,
             'total_stars': total_stars,
+            'profile_score': profile_score,
+            'score_title': score_title,
+            'score_percent': score_percent,
+            'accepted_answers_count': accepted_count,
+            'bad_answers_count': bad_count,
         }
         return render(request, 'questions/profile.html', context)

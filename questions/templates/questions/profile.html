@@ -79,6 +79,53 @@
         flex-wrap: wrap;
         margin-top: 1.5rem;
     }
+    .score-panel {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-top: 1.5rem;
+    }
+    .score-card-vertical {
+        background: var(--bg);
+        border-radius: 24px;
+        width: 180px;
+        padding: 1rem;
+        text-align: center;
+        border: 1px solid var(--card-border);
+    }
+    .score-card-vertical .score-title {
+        font-size: 0.95rem;
+        font-weight: 700;
+        margin-bottom: 0.75rem;
+    }
+    .score-bar-wrapper {
+        position: relative;
+        height: 220px;
+        width: 60px;
+        margin: 0 auto 0.75rem;
+        background: var(--bg);
+        border-radius: 30px;
+        border: 1px solid var(--card-border);
+        display: flex;
+        align-items: flex-end;
+        overflow: hidden;
+    }
+    .score-bar {
+        width: 100%;
+        background: linear-gradient(180deg, #4ec5b0, #1a4b8c);
+        transition: height 0.3s ease;
+    }
+    .score-card-vertical .score-value {
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #1a4b8c;
+    }
+    .score-card-vertical .score-subtitle {
+        font-size: 0.9rem;
+        color: var(--muted);
+        margin-top: 0.35rem;
+    }
     .stat-card {
         background: var(--bg);
         border-radius: 20px;
@@ -105,6 +152,22 @@
         font-weight: 600;
         color: var(--muted);
         cursor: pointer;
+    }
+    .btn-edit-profile {
+        background: linear-gradient(135deg, #1a4b8c, #0d2b5c);
+        color: white;
+        padding: 0.55rem 1.2rem;
+        border-radius: 999px;
+        font-weight: 600;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .btn-edit-profile:hover {
+        transform: translateY(-2px);
     }
     .tab-btn.active {
         background: linear-gradient(135deg, #1a4b8c, #0d2b5c);
@@ -189,7 +252,12 @@
 
 <div class="profile-header">
     <div class="profile-avatar">{{ profile_user.username|first|upper }}</div>
-    <h1 class="profile-name">{{ profile_user.username }}</h1>
+    <div style="display:flex; justify-content:center; align-items:center; gap:1rem; flex-wrap:wrap;">
+        <h1 class="profile-name">{{ profile_user.username }}</h1>
+        {% if user.is_authenticated and user == profile_user %}
+            <a href="{% url 'edit_profile' %}" class="btn-edit-profile"><i class="fas fa-edit"></i> Редактировать</a>
+        {% endif %}
+    </div>
     {% if profile.bio %}<p class="profile-bio">{{ profile.bio }}</p>{% endif %}
 
     <div class="profile-meta">
@@ -208,6 +276,17 @@
         <div class="stat-card"><div class="stat-value">{{ questions_count }}</div><div>вопросов</div></div>
         <div class="stat-card"><div class="stat-value">{{ answers_count }}</div><div>ответов</div></div>
         <div class="stat-card"><div class="stat-value">{{ total_stars }}</div><div>звёзд</div></div>
+    </div>
+
+    <div class="score-panel">
+        <div class="score-card-vertical">
+            <div class="score-title">Титул: {{ score_title }}</div>
+            <div class="score-bar-wrapper">
+                <div class="score-bar" style="height: {{ score_percent }}%;"></div>
+            </div>
+            <div class="score-value">{{ profile_score }}</div>
+            <div class="score-subtitle">баллов</div>
+        </div>
     </div>
 </div>
 
